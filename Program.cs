@@ -24,14 +24,11 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -47,7 +44,58 @@ app.MapGet("/servicetickets", () =>
 
 app.MapGet("/servicetickets/{id}", (int id) =>
 {
-    return serviceTickets.FirstOrDefault(st => st.Id == id);
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+    if (serviceTicket == null)
+    {
+        return Results.NotFound();
+    }
+    serviceTicket.Employee = employees.FirstOrDefault(e => e.Id == serviceTicket.EmployeeId);
+    serviceTicket.Customer = customers.FirstOrDefault(c => c.Id == serviceTicket.CustomerId);
+    return Results.Ok(serviceTicket);
+});
+
+app.MapGet("/employees", () =>
+{
+    return employees;
+});
+
+app.MapGet("/employees/{id}", (int id) =>
+{
+    Employee employee = employees.FirstOrDefault(e => e.Id == id);
+    if (employee == null)
+    {
+        return Results.NotFound();
+    }
+    employee.ServiceTickets = serviceTickets.Where(st => st.EmployeeId == id).ToList();
+    return Results.Ok(employee);
+});
+
+app.MapGet("/customers", () =>
+{
+    return customers;
+});
+
+app.MapGet("/customers/{id}", (int id) =>
+{
+    Customer customer = customers.FirstOrDefault(c => c.Id == id);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+    customer.ServiceTickets = serviceTickets.Where(st => st.CustomerId == id).ToList();
+    return Results.Ok(customer);
+});
+
+app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
+{
+    serviceTicket.Id = serviceTickets.Max(st => st.Id) + 1;
+    serviceTickets.Add(serviceTicket);
+    return serviceTicket;
+});
+
+app.MapDelete("/servicetickets/{id}", (int id) =>
+{
+    serviceTickets.RemoveAll(st => st.Id == id);
 });
 
 app.Run();
