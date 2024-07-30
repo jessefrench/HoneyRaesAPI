@@ -174,7 +174,7 @@ app.MapGet("/servicetickets/unassigned", () =>
     return serviceTickets.Where(ticket => ticket.EmployeeId == null);
 });
 
-app.MapGet("/servicetickets/completed", () =>
+app.MapGet("/servicetickets/complete", () =>
 {
     var completedTickets = serviceTickets
         .Where(t => t.DateCompleted.HasValue)
